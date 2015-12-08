@@ -1,4 +1,4 @@
 SALib
-matplotlib=1.4.3
+matplotlib
 seaborn
 numpy
