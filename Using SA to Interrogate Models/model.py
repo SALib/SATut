@@ -1,4 +1,3 @@
-
 # coding: utf-8
 
 # # Using Sensitivity Analysis to Interrogate Models
@@ -6,6 +5,30 @@
 # Will Usher, UCL Energy Institute
 #
 # 10th December 2015
+
+'''
+Revenue = Max Power * Daily Capacity Payment * (Time Available/24) + Electricity Exported * Electricity Price
+        = Max Power * Daily Capacity Payment * (Time Available/24) + Max Power * Time Available * Electricity Price
+
+Alternatives:
+
+Use a BEV for V2G overnight, although power is constrained by:
+    1. need to charge vehicle
+    2. size of battery
+    3. size of connection
+    4. requirements for range buffer
+    5. distance driven per day
+
+ Use a separate battery:
+     1. charge during times of cheap electricity
+     2. extra expense of purchasing battery
+     3. size of connection is constrained
+
+Max_Power = max(0, min(connection, available_energy / duration)
+
+duration/24 * Max_Power * Capacity Payment
+'''
+
 
 import numpy as np
 
