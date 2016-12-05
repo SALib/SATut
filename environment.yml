@@ -1,0 +1,9 @@
+name: satut
+channels:
+- conda-forge
+dependencies:
+- python=3.5
+- ipywidgets
+- salib
+- seaborn
+- matplotlib
