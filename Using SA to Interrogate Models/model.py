@@ -1,14 +1,20 @@
 # coding: utf-8
+"""
+Using Sensitivity Analysis to Interrogate Models
+================================================
+Will Usher, University of Oxford
 
-# # Using Sensitivity Analysis to Interrogate Models
-#
-# Will Usher, UCL Energy Institute
-#
-# 10th December 2015
+Presented at UCL on:
+- 10th December 2015
+- 8th December 2016
 
-'''
-Revenue = Max Power * Daily Capacity Payment * (Time Available/24) + Electricity Exported * Electricity Price
-        = Max Power * Daily Capacity Payment * (Time Available/24) + Max Power * Time Available * Electricity Price
+Encodes a basic model of Vehicle to Grid (V2G) as developed by Kempton et al.
+(2005).
+
+Revenue = Max Power * Daily Capacity Payment * (Time Available/24)
+          + Electricity Exported * Electricity Price
+        = Max Power * Daily Capacity Payment * (Time Available/24)
+          + Max Power * Time Available * Electricity Price
 
 Alternatives:
 
@@ -27,9 +33,7 @@ Use a BEV for V2G overnight, although power is constrained by:
 Max_Power = max(0, min(connection, available_energy / duration)
 
 duration/24 * Max_Power * Capacity Payment
-'''
-
-
+"""
 import numpy as np
 
 def max_vehicle_power(connector_power,
@@ -40,66 +44,77 @@ def max_vehicle_power(connector_power,
                       driving_efficiency=4.025,
                       inverter_efficiency=0.93
                       ):
-    '''
+    """
     Compute the maximum electrical power output of a vehicle battery when
     connected to the electricity grid
 
-    Arguments:
-        connector_power - the power capacity of the connection to the grid
-        stored_energy - energy available as DC kWh to the inverter
-        distance_driven - distance driven (km) since energy storage full
-        range_buffer - minimum range required by the driver (km)
-        driving_efficiency - 4.025 (km/kWh)
-        inverter_efficiency - electrical conversion efficiency of DC to AC
-                              inverter (93%)
-        dispatch_time - time over which the vehicle's stored energy
-                        is dispatched (hours)
+    Arguments
+    =========
+    connector_power : float
+        the power capacity of the connection to the grid
+    stored_energy : float
+        energy available as DC kWh to the inverter
+    distance_driven : float
+        distance driven (km) since energy storage full
+    range_buffer : float
+        minimum range required by the driver (km)
+    driving_efficiency : float, default=4.025
+        efficiency is measured in (km/kWh)
+    inverter_efficiency : float
+        electrical conversion efficiency of DC to AC inverter (93%)
+    dispatch_time : float
+        time over which the vehicle's stored energy is dispatched (hours)
 
-    Returns:
+    Returns
+    =======
+    float
         the maximum power in kW of a vehicle connected to the grid
-    '''
+    """
+    maximum_vehicle_power = ((stored_energy - ((distance_driven + range_buffer)
+                            / driving_efficiency)) * \
+                            inverter_efficiency)  / dispatch_time
+
+    return np.maximum(0, np.minimum(connector_power, maximum_vehicle_power))
 
 
-    max_vehicle_power = ((stored_energy - ((distance_driven + range_buffer) / driving_efficiency)) * \
-    inverter_efficiency)  / dispatch_time
+def battery_lifetime(lifetime_cycles, total_energy_stored,
+                     depth_of_discharge):
+    """Compute the lifetime of a battery in energy terms
 
-    return np.maximum(0, np.minimum(connector_power, max_vehicle_power))
+    Arguments
+    =========
 
+    lifetime_cycles
+    total_energy_stored
+        size of battery (kWh)
+    depth_of_discharge
+        the depth of discharge for which lifetime_cycles is defined
+        (0 <= DoD <= 1)
 
-def battery_lifetime(lifetime_cycles,
-                     total_energy_stored,
-                     depth_of_discharge
-                    ):
-    '''
-    Compute the lifetime of a battery in energy terms
+    Returns
+    =======
+        battery_lifetime in energy terms - units: kWh"""
 
-    Arguments:
-        lifetime_cycles -
-        total_energy_stored - size of battery (kWh)
-        depth_of_discharge - the depth of discharge for which
-                            lifetime_cycles is defined (0 <= DoD <= 1)
-
-    Returns:
-        battery_lifetime in energy terms - units: kWh
-
-    '''
     lifetime = lifetime_cycles * total_energy_stored * depth_of_discharge
     return lifetime
 
 
 def annualized_capital_cost(cost, discount_rate, lifetime):
     '''
-    Arguments:
-        cost - in GBP2015
-        discount_rate - %
-        lifetime - in years
+    Arguments
+    =========
+    cost : float
+        in GBP2015
+    discount_rate : float
+        %
+    lifetime : float
+        in years
     '''
     ann_cc = cost * (discount_rate / (1-(1+discount_rate)**-lifetime))
     return ann_cc
 
 
-def cost_of_vehicle_to_grid(
-                            battery_capital_cost,
+def cost_of_vehicle_to_grid(battery_capital_cost,
                             lifetime_cycles,
                             total_energy_stored,
                             depth_of_discharge,
@@ -145,9 +160,19 @@ def compute_profit(
         range_buffer = 0, # km
         ratio_dispatch_to_contract = 0.1,
         hours_connected_per_day = 18):
-    '''
-    Computes the profit (revenue-cost) of using vehicle for regulation services
-    '''
+    """Computes the profit (revenue-cost) of using vehicle for regulation services
+
+    Arguments
+    =========
+
+    Returns
+    =======
+    profit : float
+        The difference between revenue and cost
+    revenue
+    cost
+
+    """
     battery_capital_cost = battery_size * battery_unit_cost # 2015£
 
     stored_energy = battery_size * depth_of_discharge # kWh
@@ -160,12 +185,15 @@ def compute_profit(
                                         stored_energy,
                                         distance_driven,
                                         range_buffer,
-                                        hours_connected_per_day * ratio_dispatch_to_contract,
+                                        hours_connected_per_day * \
+                                        ratio_dispatch_to_contract,
                                         )
 
-    energy_dispatched = ratio_dispatch_to_contract * power_available * time_dispatched
+    energy_dispatched = ratio_dispatch_to_contract * \
+                        power_available * time_dispatched
 
-    revenue = capacity_price * power_available * total_hours_connected + electricity_price * energy_dispatched
+    revenue = capacity_price * power_available * total_hours_connected \
+              + electricity_price * energy_dispatched
 
     cost = cost_of_vehicle_to_grid(battery_capital_cost,
                                    lifetime_cycles,
