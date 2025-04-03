@@ -2,10 +2,10 @@ name: satut
 channels:
 - conda-forge
 dependencies:
-- python=3.7
+- python=3.12
 - ipywidgets
 - seaborn
 - matplotlib
 - pip
 - pip:
-  - salib
+  - SALib
