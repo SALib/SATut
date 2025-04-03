@@ -2,7 +2,7 @@
 
 There are several alternative ways in which you can use these notebooks.
 
-1. Interactive online access using [![Binder](http://mybinder.org/badge.svg)](http://mybinder.org/repo/salib/satut) (changes won't be saved)
+1. Interactive online access using [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/SALib/SATut/master?urlpath=%2Fdoc%2Ftree%2Findex.ipynb) (changes won't be saved)
 
 2. [Download](http://www.github.com/SALib/SATut) the notebooks, and install
    jupyter and python for interactive offline access.  For example, open
